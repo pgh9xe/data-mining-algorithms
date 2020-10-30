@@ -1,0 +1,48 @@
+#create a matrix of responsibilities given a vector of lambdas, pi, and the data
+e_step = function(lambda, pi){
+  #initialize the vectors of 
+  r1 = numeric(length(y))
+  r2 = numeric(length(y))
+  for (n in seq(length(y))){
+    r1[n] = (pi* lambda[1]^(y[n])*exp(-lambda[1]))/(pi*lambda[1]^(y[n])*exp(-lambda[1])+(1-pi)*lambda[2]^(y[n])*exp(-lambda[2]))
+    r2[n] = ((1-pi)* lambda[2]^(y[n])*exp(-lambda[2]))/(pi*lambda[1]^(y[n])*exp(-lambda[1])+(1-pi)*lambda[2]^(y[n])*exp(-lambda[2]))
+    
+  }
+  return(cbind(r1,r2))
+}
+
+
+
+#pass a matrix of responsibilities and get the new lambdas
+lambda_m_step = function(e){
+  lambda_1_new = sum(e[,1]*y)/sum(e[,1])
+  lambda_2_new =sum(e[,2]*y)/sum(e[,2])
+  return(c(lambda_1_new, lambda_2_new))
+}
+
+
+#pass a matrix of responsibilities and get the new pi
+pi_m_step = function(e){
+  pi_new = sum(e[,1])/(sum(e[,1])+sum(e[,2]))
+  return(pi_new)
+}
+
+#bring it all together, initiate and converge
+
+em = function(lambda_init, pi_init, max_iter){
+  lambda = lambda_init
+  pi = pi_init
+  i = 1
+  while (i<max_iter){
+    e =  e_step(lambda,pi)
+    lambda = lambda_m_step(e)
+    pi = pi_m_step(e)
+    i = i +1
+  }
+  data.frame(lambda1 = lambda[1], lambda2 = lambda[2], pi = pi, pi_c = (1-pi) )
+}
+# I don't know the right way to initiate lambdas, and I'm simply doing a max-iteration. There is definitely a better way to define convergence. Lambdas definitely can't be the same. It converges to 13.9 for each lambda and .5 for pi if they are. But as long as they're different, it seems to converge well. Starting with uninformed priors works well too. 
+
+em(c(6,5),.5,40)
+
+#I predominantly used "Expectation-Maximization for Estimating Parameters for a Mixture of Poissons" By Brandon Malone and the MML book for the math. 
