@@ -1,0 +1,30 @@
+library(tidyverse)
+# create some data nonesense to test mechanics on. 
+test = data.frame(y = c(1,1,1,0,0), x1 = c(16,15,16,12,12), x2 = c(11,12,11,17,19))
+test_x = test %>% dplyr::select(-y) %>% as.matrix()
+
+cbind(int = 1, test_x)
+
+logistic= function(X,y,conv){
+  X = cbind(int = 1, X)
+  beta_0 = matrix(c(numeric(ncol(X))))
+  change = 2
+  g_old = X%*%beta_0
+  p = 1/(1+exp(-g_old))
+  while (change > conv){
+    W_diag = p*(1-p)
+    W = sparseMatrix(i =seq(nrow(X)), j = seq(nrow(X)), x = c(W_diag))
+    B_new = solve(t(X) %*% W %*% X) %*% t(X) %*% W %*% (X %*% beta_0 +
+                                                          solve(W) %*%
+                                                          (y-p))
+    change = matrix()
+    g_new = X%*%B_new
+    p_new = matrix(1/(1+exp(-g_new)))
+    p_matrix = rbind(c(p), c(p_new))
+    change = dist(p_matrix)
+    beta_0 = matrix(B_new)
+    p  = p_new
+  }
+  return(beta_0)
+}
+logistic(test_x, test$y, .001)
